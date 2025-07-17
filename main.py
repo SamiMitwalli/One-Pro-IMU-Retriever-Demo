@@ -86,8 +86,8 @@ class IMUReader:
         try:
             values = [struct.unpack('<f', bytes.fromhex(chunk))[0] for chunk in chunks[:6]]
             return IMUData(
-                ax=values[0], ay=values[1], az=values[2],
-                gx=values[5], gy=values[4], gz=values[3]
+                ax=values[5], ay=values[4], az=values[3],
+                gx=values[0], gy=values[1], gz=values[2]
             )
         except (ValueError, struct.error):
             return None
