@@ -1,13 +1,13 @@
-# XREAL One Pro IMU Retriever Script
-# Connects to TCP socket and decodes IMU sensor data
+# IMU Reader
+# TCP communication and protocol handling for XREAL One Pro
 # by Daniel Sami Mitwalli
 
 import socket
 import struct
 import time
 import logging
-from dataclasses import dataclass
 from typing import Optional, Callable
+from src.imu_data import IMUData
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -23,22 +23,8 @@ FOOTER = bytes.fromhex("000000cff753e3a59b0000db34b6d782de1b43")
 SENSOR_MSG = bytes.fromhex("00401f000040")
 
 # Protocol data offsets
-DATA_START_OFFSET = 20  # Could be: timestamp(8) + invariant(2) + static(10)
-DATA_END_OFFSET = -26   # Could be: sensor_msg(6) + date_info(20)
-
-@dataclass
-class IMUData:
-    """IMU sensor data structure"""
-    gx: float  # Gyroscope X
-    gy: float  # Gyroscope Y
-    gz: float  # Gyroscope Z
-    ax: float  # Accelerometer X
-    ay: float  # Accelerometer Y
-    az: float  # Accelerometer Z
-    
-    def __str__(self):
-        return (f"Gx={self.gx:.3f}, Gy={self.gy:.3f}, Gz={self.gz:.3f} | "
-                f"Ax={self.ax:.3f}, Ay={self.ay:.3f}, Az={self.az:.3f}")
+DATA_START_OFFSET = 20  # timestamp(8) + invariant(2) + static(10)
+DATA_END_OFFSET = -26   # sensor_msg(6) + date_info(20)
 
 class IMUReader:
     def __init__(self, ip: str = IP, port: int = PORT, timeout: int = TIMEOUT, 
@@ -172,11 +158,3 @@ class IMUReader:
             self.logger.error(f"Error: {e}")
         finally:
             self.disconnect()
-
-def main():
-    """Main function"""
-    with IMUReader() as reader:
-        reader.run()
-
-if __name__ == "__main__":
-    main()
