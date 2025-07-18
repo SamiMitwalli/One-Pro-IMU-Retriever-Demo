@@ -2,7 +2,7 @@
 
 A demo head tracking solution for the `XREAL One Pro` glasses using IMU sensor data.
 
-This is a proof of concept. The `fetchX1imu.py` retrieves a stream of data from the XREAL One Pro's IMU via TCP, parsing the gyroscope and accelerometer data. I hope this will be helpful for future open-source projects involving the XReal One/One Pro, such as those involving support for e.g. SteamVR and Android XR.
+This is a proof of concept. The `imu_reader.py` retrieves a stream of data from the XREAL One Pro's IMU via TCP, parsing the gyroscope and accelerometer data. I hope this will be helpful for future open-source projects involving the XReal One/One Pro, such as those involving support for e.g. SteamVR and Android XR.
 
 ## 🚀 Quick Start
 
