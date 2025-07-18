@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# XREAL One Pro Head Tracking Launcher
+# Head Tracking Launcher
 # by Daniel Sami Mitwalli
 
 import sys
 
 def show_menu():
     print("=" * 60)
-    print("         XREAL ONE PRO HEAD TRACKING")
+    print("         HEAD TRACKING DEMO")
     print("=" * 60)
     print("\nChoose your tracking mode:\n")
     print("1. Console Mode - Terminal-based head tracking")

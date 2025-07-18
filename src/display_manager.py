@@ -41,7 +41,7 @@ class DisplayManager:
         progress = tracker.get_calibration_progress()
         self.clear_screen()
         print("=" * 60)
-        print("           XREAL ONE PRO HEAD TRACKING")
+        print("           HEAD TRACKING DEMO")
         print("=" * 60)
         print("\n🔄 CALIBRATING GYROSCOPE...")
         print(f"Keep glasses STATIONARY for calibration")
@@ -76,7 +76,7 @@ class DisplayManager:
         
         self.clear_screen()
         print("=" * 60)
-        print("           XREAL ONE PRO HEAD TRACKING")
+        print("           HEAD TRACKING DEMO")
         print("=" * 60)
         print(f"Rate: {rate:.1f}Hz | Message: {message_count:06d}")
         print(f"Movement: {movement}")
@@ -108,7 +108,7 @@ class DisplayManager:
     
     def show_startup_instructions(self):
         """Show startup instructions"""
-        print("Starting XREAL One Pro Head Tracking...")
+        print("Starting Head Tracking Demo...")
         print("=" * 60)
         print("📋 INSTRUCTIONS:")
         print("1. Place glasses on a FLAT, STABLE surface")
