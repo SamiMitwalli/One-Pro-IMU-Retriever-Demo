@@ -1,5 +1,5 @@
 # 3D Head Tracking Visualization
-# VR-style head tracking for XREAL One Pro IMU data
+# VR-style head tracking for One Pro IMU data
 # by Daniel Sami Mitwalli
 
 import pygame

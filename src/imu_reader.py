@@ -1,5 +1,5 @@
 # IMU Reader
-# TCP communication and protocol handling for XREAL One Pro
+# TCP communication and protocol handling for XREAL One Pro's IMU
 # by Daniel Sami Mitwalli
 
 import socket

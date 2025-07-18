@@ -1,4 +1,4 @@
-# XREAL One Pro IMU Retriever Demo
+# One Pro IMU Retriever Demo
 numpy>=1.21.0
 pygame>=2.1.0
 PyOpenGL>=3.1.6

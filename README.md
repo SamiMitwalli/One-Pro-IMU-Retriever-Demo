@@ -1,4 +1,4 @@
-# XREAL One Pro IMU Retriever Demo
+# One Pro IMU Retriever Demo
 
 A demo head tracking solution for the `XREAL One Pro` glasses using IMU sensor data.
 
