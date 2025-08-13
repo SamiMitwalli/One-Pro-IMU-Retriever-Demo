@@ -3,12 +3,18 @@
 # by Daniel Sami Mitwalli
 
 import sys
-import select
-import termios
-import tty
 import threading
 import queue
 import time
+import os
+
+# Platform-specific imports
+if os.name == 'nt':  # Windows
+    import msvcrt
+else:  # Unix-like systems (Linux, macOS)
+    import select
+    import termios
+    import tty
 
 class KeyboardHandler:
     """Handles keyboard input for head tracking controls"""
@@ -52,7 +58,11 @@ class KeyboardHandler:
         try:
             if not sys.stdin.isatty():
                 return False
-            return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
+            
+            if os.name == 'nt':  # Windows
+                return msvcrt.kbhit()
+            else:  # Unix-like systems
+                return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
         except:
             return False
 
@@ -61,14 +71,20 @@ class KeyboardHandler:
         try:
             if not sys.stdin.isatty():
                 return ""
-            fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
-            try:
-                tty.setraw(sys.stdin.fileno())
-                ch = sys.stdin.read(1)
-            finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-            return ch
+            
+            if os.name == 'nt':  # Windows
+                if msvcrt.kbhit():
+                    return msvcrt.getch().decode('utf-8')
+                return ""
+            else:  # Unix-like systems
+                fd = sys.stdin.fileno()
+                old_settings = termios.tcgetattr(fd)
+                try:
+                    tty.setraw(sys.stdin.fileno())
+                    ch = sys.stdin.read(1)
+                finally:
+                    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+                return ch
         except:
             return ""
     
