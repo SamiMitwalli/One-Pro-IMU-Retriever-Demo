@@ -8,15 +8,34 @@ from OpenGL.GLU import *
 import math
 import threading
 import time
+import numpy as np
 
 from src.head_tracker import HeadTracker
 from src.imu_data import IMUData
 from src.imu_reader import IMUReader
 
+def compute_fov(diagonal_in, aspect_ratio, viewer_distance_m):
+    in_to_m = 0.0254
+    diagonal_m = diagonal_in * in_to_m
+
+    # Calculate screen height and width
+    h = diagonal_m / math.sqrt(1 + aspect_ratio**2)
+    w = h * aspect_ratio
+
+    # Compute vertical FOV
+    fov_y = 2 * math.degrees(math.atan((h / 2) / viewer_distance_m))
+
+    return fov_y, w, h
+
+
 # Initialize pygame and OpenGL
 def init_demo():
     pygame.init()
-    display = (800, 600)
+    display = (1920, 1080)
+    diagonal_in = 162
+    aspect_ratio = 16 / 9
+    viewer_distance_m = 4.0
+
     pygame.display.set_mode(display, pygame.DOUBLEBUF | pygame.OPENGL)
     pygame.display.set_caption("Demo Head Tracking")
     
@@ -29,11 +48,16 @@ def init_demo():
     # Set up perspective
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    gluPerspective(45, (display[0]/display[1]), 0.1, 50.0)
+
+    fov_y, _, _ = compute_fov(diagonal_in, aspect_ratio, viewer_distance_m)
+
+    # Use in OpenGL
+    gluPerspective(fov_y, aspect_ratio, 0.1, 50.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     
     print("OpenGL initialized successfully!")
+    return display
 
 def draw_cube():
     """Draw a colored cube with wireframe"""
@@ -174,9 +198,9 @@ class HeadTracking3D:
                     self.camera_sensitivity = max(0.1, self.camera_sensitivity - 0.1)
                     print(f"Sensitivity: {self.camera_sensitivity:.1f}")
     
-    def render(self):
+    def render(self, viewport_x, eye_offset):
         """Render the 3D scene"""
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glViewport(viewport_x, 0, self.display[0] // 2, self.display[1])
         glLoadIdentity()
         
         if not self.head_tracker.is_calibrated:
@@ -191,23 +215,40 @@ class HeadTracking3D:
                 progress = self.head_tracker.get_calibration_progress()
                 print(f"\rCalibration: {progress:.1f}%", end="", flush=True)
         else:
-            # VR-style head tracking: Fixed camera position, only viewing direction changes
-            camera_x, camera_y, camera_z = 0, 0, 8
             
-            # Calculate look direction from head tracking
+            # --- Inputs ---
+            camera_x, camera_y, camera_z = 0, 0, 8  # Head position (fixed in your example)
+
+            # === Look direction (from yaw/pitch) ===
             look_x = math.sin(self.yaw) * math.cos(self.pitch)
             look_y = -math.sin(self.pitch)
             look_z = -math.cos(self.yaw) * math.cos(self.pitch)
-            
-            # Calculate up vector with roll
+            look_dir = np.array([look_x, look_y, look_z], dtype=np.float32)
+            look_dir /= np.linalg.norm(look_dir)
+
+            # === Up vector (from pitch/roll/yaw) ===
             up_x = -math.sin(self.roll) * math.cos(self.yaw) - math.cos(self.roll) * math.sin(self.yaw) * (-math.sin(self.pitch))
             up_y = math.cos(self.roll) * math.cos(self.pitch)
             up_z = -math.sin(self.roll) * math.sin(self.yaw) + math.cos(self.roll) * math.cos(self.yaw) * (-math.sin(self.pitch))
-            
-            # Set camera view
-            gluLookAt(camera_x, camera_y, camera_z,
-                      camera_x + look_x, camera_y + look_y, camera_z + look_z,
-                      up_x, up_y, up_z)
+            up_dir = np.array([up_x, up_y, up_z], dtype=np.float32)
+            up_dir /= np.linalg.norm(up_dir)
+
+            # === Right vector (needed for stereo offset) ===
+            right_dir = np.cross(look_dir, up_dir)
+            right_dir /= np.linalg.norm(right_dir)
+
+            # === Apply eye offset to camera position and look-at target ===
+            eye_shift = right_dir * eye_offset
+
+            eye_pos = np.array([camera_x, camera_y, camera_z], dtype=np.float32) + eye_shift
+            target_pos = eye_pos + look_dir  # Look in direction of view
+
+            # === Set camera ===
+            gluLookAt(
+                eye_pos[0], eye_pos[1], eye_pos[2],      # Eye (camera) position
+                target_pos[0], target_pos[1], target_pos[2],  # Target position
+                up_dir[0], up_dir[1], up_dir[2]          # Up vector
+            )
             
             # Draw scene objects (all static in world space)
             draw_axis()
@@ -246,7 +287,6 @@ class HeadTracking3D:
                 draw_cube()
                 glPopMatrix()
         
-        pygame.display.flip()
     
     def run(self):
         """Main application loop"""
@@ -260,7 +300,7 @@ class HeadTracking3D:
         print("• Q/ESC - Quit")
         print("=" * 60)
         
-        init_demo()
+        self.display = init_demo()
         self.start_imu_thread()
         
         # Calibration phase
@@ -284,7 +324,12 @@ class HeadTracking3D:
                 auto_zero_frames += 1
             
             self.handle_events()
-            self.render()
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+            eye_offset = 0.05
+            self.render(0, -eye_offset)
+            self.render(self.display[0] // 2, eye_offset)
+            pygame.display.flip()
             clock.tick(60)
             
             if self.head_tracker.is_calibrated:
