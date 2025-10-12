@@ -18,7 +18,7 @@ PORT = 52998
 TIMEOUT = 5
 
 # Protocol constants
-HEADER = bytes.fromhex("283600000080")
+HEADER = bytes.fromhex("273600000080")
 FOOTER = bytes.fromhex("000000cff753e3a59b0000db34b6d782de1b43")
 SENSOR_MSG = bytes.fromhex("00401f000040")
 
@@ -80,11 +80,11 @@ class IMUReader:
 
     def process_message(self, message):
         """Process raw message and extract IMU data"""
-        if len(message) < len(HEADER) + 8 + len(FOOTER) + 31:
+        if len(message) < len(HEADER) + 8 + len(FOOTER) + 30:
             return None
             
         # Remove header, session ID (8 bytes), footer, and tail (31 bytes)
-        data = message[len(HEADER) + 8:-len(FOOTER) - 31]
+        data = message[len(HEADER) + 8:-len(FOOTER) - 30]
         
         if not data.endswith(SENSOR_MSG):
             return None
@@ -128,12 +128,12 @@ class IMUReader:
                         if header_pos == -1:
                             break
                             
-                        footer_pos = recv_buffer.find(FOOTER, header_pos)
+                        footer_pos = recv_buffer.find(HEADER, header_pos + 1)
                         if footer_pos == -1:
                             break
 
                         # Extract complete message
-                        message_end = footer_pos + len(FOOTER)
+                        message_end = footer_pos - 1
                         message = recv_buffer[header_pos:message_end]
                         recv_buffer = recv_buffer[message_end:]
 
